@@ -14,11 +14,11 @@
 #   COMPRESS gzip                     Program to compress man page, or ""
 #   MANDIR   /usr/share/man/          Where to install man page
 
-CC	= gcc
+CC	= cc
 COMPRESS = gzip
 CFLAGS	= -O2 -g -W -Wall -Werror
-MANDIR	= /usr/share/man/
-PKG_CONFIG = /usr/bin/pkg-config
+MANDIR	= /usr/local/man/
+PKG_CONFIG = pkg-config
 
 # These variables are not intended to be user-settable
 CONFDIR = /etc/sane.d
@@ -53,7 +53,10 @@ airscan_CFLAGS += `pkg-config --cflags --libs avahi-glib`
 airscan_CFLAGS += `pkg-config --cflags --libs libjpeg`
 airscan_CFLAGS += `pkg-config --cflags --libs libsoup-2.4`
 airscan_CFLAGS += `pkg-config --cflags --libs libxml-2.0`
-airscan_CFLAGS += -Wl,--version-script=airscan.sym
+airscan_CFLAGS += -I/usr/local/include/libepoll-shim
+airscan_CFLAGS_LIBONLY = -Wl,--version-script=airscan.sym
+
+LDFLAGS += -lm -lepoll-shim
 
 # Merge DESTDIR and PREFIX
 PREFIX := $(abspath $(DESTDIR)/$(PREFIX))
@@ -80,17 +83,17 @@ all:	$(BACKEND) test
 
 $(BACKEND): Makefile $(SRC) airscan.h airscan.sym
 	-ctags -R .
-	$(CC) -o $(BACKEND) -shared $(CPPFLAGS) $(SRC) $(airscan_CFLAGS) $(LDFLAGS)
+	$(CC) -o $(BACKEND) -shared $(CPPFLAGS) $(SRC) $(airscan_CFLAGS) $(airscan_CFLAGS_LIBONLY) $(LDFLAGS)
 
 install: all
 	mkdir -p $(PREFIX)$(CONFDIR)
 	mkdir -p $(PREFIX)$(CONFDIR)/dll.d
-	cp -n airscan.conf $(PREFIX)$(CONFDIR)
-	cp -n dll.conf $(PREFIX)$(CONFDIR)/dll.d/airscan
-	install -s -D -t $(PREFIX)$(LIBDIR)/sane $(BACKEND)
-	mkdir -p $(PREFIX)/$(MANDIR)/man5
-	install -m 644 -D -t $(PREFIX)$(MANDIR)/man5 $(MANPAGE)
-	[ "$(COMPRESS)" = "" ] || $(COMPRESS) -f $(PREFIX)$(MANDIR)/man5/$(MANPAGE)
+	cp airscan.conf $(PREFIX)$(CONFDIR)
+	cp dll.conf $(PREFIX)$(CONFDIR)/dll.d/airscan
+	install -s $(BACKEND) $(PREFIX)$(LIBDIR)/sane
+	mkdir -p $(MANDIR)/man5
+	install -m 644 $(MANPAGE) $(MANDIR)/man5
+	[ "$(COMPRESS)" = "" ] || $(COMPRESS) -f $(MANDIR)/man5/$(MANPAGE)
 
 clean:
 	rm -f test $(BACKEND) tags

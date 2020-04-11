@@ -25,7 +25,7 @@
 
 /* Standard SANE configuration directory
  */
-#define CONFIG_SANE_CONFIG_DIR          "/etc/sane.d/"
+#define CONFIG_SANE_CONFIG_DIR          "/usr/local/etc/sane.d/"
 
 /* Sane-airscan configuration file and subdirectory names
  */
